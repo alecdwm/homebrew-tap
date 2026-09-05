@@ -22,13 +22,20 @@ brew install --cask sshdrive
 sshdrive add nas user@nas.example.com --remote-path /volume1
 ```
 
-Installing does three things: copies `SSH Drive.app` into `/Applications`,
-symlinks the `sshdrive` command into Homebrew's `bin`, and launches the app once
-in the background so macOS registers its File Provider extension and its
-background agent. You will see two pieces of system UI and no others:
+Installing does four things: copies `SSH Drive.app` into `/Applications`,
+symlinks the `sshdrive` command into Homebrew's `bin`, verifies the app's
+notarization itself with `spctl --assess` and then clears the quarantine
+attribute Homebrew leaves on it, and launches the app once in the background so
+macOS registers its File Provider extension and its background agent.
 
-- Gatekeeper's one-time "downloaded from the internet" dialog the first time the
-  app opens.
+The quarantine step is what makes the extension register at all: LaunchServices
+registers no plugin of a quarantined bundle that has never been opened by a
+person, so without it the agent runs and the Finder mount never appears. The
+verification is not skipped, only moved - the cask does it, before the attribute
+goes, and prints the verdict.
+
+You will see one piece of system UI and no others:
+
 - The "Background Items Added" notification. The item is already enabled; there
   is nothing to switch on in System Settings.
 

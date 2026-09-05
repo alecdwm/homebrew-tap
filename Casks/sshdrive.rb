@@ -1,6 +1,6 @@
 cask "sshdrive" do
-  version "0.1.0"
-  sha256 "be1c283d952413affab846ae2be8add8acab706d589081e57019738f9ae6a16f"
+  version "0.1.1"
+  sha256 "1575f537f303ef1369dffd11f18cc1d15de2dddbeae3be8705d6b6ddeb5695cf"
 
   url "https://github.com/alecdwm/sshdrive/releases/download/v#{version}/SSH-Drive-#{version}.dmg"
   name "SSH Drive"
@@ -20,8 +20,24 @@ cask "sshdrive" do
   # Launching the app is what registers the File Provider extension with PlugInKit and the
   # login item through SMAppService, and both must be done from the app's own bundle
   # (section 10). macOS then posts its "background item added" notification, with the item
-  # already enabled, and Gatekeeper shows its one-time downloaded-from-the-internet dialog
-  # the first time the quarantined bundle is opened. Those are the only UI a user sees.
+  # already enabled. That notification is the only UI a user sees.
+  #
+  # The quarantine attribute has to go first, and this is not cosmetic. Homebrew leaves
+  # `com.apple.quarantine` on the installed bundle, and LaunchServices registers no plugin
+  # of a quarantined bundle that has never been assessed through a user-visible launch -
+  # which `open -g` is not. The agent still runs (launchd starts it directly) while
+  # `pluginkit -m` prints nothing, `sshdrive doctor` fails "extension registered", and
+  # fileproviderd answers `getDomainsForProviderIdentifier((null)) failed: FP -2001
+  # Underlying FP -2014`. `pluginkit -a` registers the appex by hand and the next launch
+  # wipes it again; stripping the attribute and opening the app registers it durably
+  # (first real cask install, macOS 26.6.2, 2026-09-05).
+  #
+  # Nothing is skipped by removing it. The DMG was assessed on the download path, its
+  # notarization ticket is stapled to the app inside it, and `spctl --assess` is run here
+  # on the installed copy and logged, so the verification Gatekeeper would do at first
+  # open has already been done - by us, before the attribute goes. What the user loses is
+  # the one-time "downloaded from the Internet" dialog, which they cannot answer anyway:
+  # `open -g` shows it to nobody.
   #
   # The unregister first is not belt and braces. Homebrew deletes the old app and installs
   # the new one, and a login item whose bundle has been deleted and put back keeps its
@@ -31,6 +47,21 @@ cask "sshdrive" do
   # concerned the item is still enabled. Only unregister() clears it (S1 f2, 2026-09-04).
   # On a first install there is nothing to unregister and the call is a no-op.
   postflight do
+    assessment = system_command "/usr/sbin/spctl",
+                                args: ["--assess", "--type", "execute", "--verbose=4",
+                                       "#{appdir}/SSH Drive.app"],
+                                must_succeed: false
+    verdict = assessment.merged_output.strip
+    if assessment.success?
+      ohai "SSH Drive: #{verdict}"
+    else
+      opoo "SSH Drive did not pass Gatekeeper assessment: #{verdict}"
+    end
+
+    system_command "/usr/bin/xattr",
+                   args: ["-dr", "com.apple.quarantine", "#{appdir}/SSH Drive.app"],
+                   must_succeed: false
+
     system_command "#{appdir}/SSH Drive.app/Contents/MacOS/SSH Drive",
                    env: { "SSHDRIVE_AGENT_ROLE" => "unregister" },
                    must_succeed: false
