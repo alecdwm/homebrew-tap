@@ -1,4 +1,4 @@
-cask "ssh-drive" do
+cask "sshdrive" do
   version "0.1.0"
   sha256 "be1c283d952413affab846ae2be8add8acab706d589081e57019738f9ae6a16f"
 

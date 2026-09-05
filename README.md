@@ -10,7 +10,7 @@ brew tap alecdwm/tap
 
 | Token | What it installs | Source |
 |---|---|---|
-| `ssh-drive` | SSH Drive: mounts SFTP locations in Finder through the File Provider framework, driven by the `sshdrive` command-line tool. No GUI. | [alecdwm/sshdrive](https://github.com/alecdwm/sshdrive) |
+| `sshdrive` | SSH Drive: mounts SFTP locations in Finder through the File Provider framework, driven by the `sshdrive` command-line tool. No GUI. | [alecdwm/sshdrive](https://github.com/alecdwm/sshdrive) |
 
 ## SSH Drive
 
@@ -18,7 +18,7 @@ Requires macOS 14 or later on Apple silicon or Intel. The DMG is Developer ID
 signed and notarized.
 
 ```sh
-brew install --cask ssh-drive
+brew install --cask sshdrive
 sshdrive add nas user@nas.example.com --remote-path /volume1
 ```
 
@@ -40,7 +40,7 @@ VPN.
 ### Upgrading
 
 ```sh
-brew upgrade --cask ssh-drive
+brew upgrade --cask sshdrive
 ```
 
 Mounted locations, cached files and pending uploads survive an upgrade. The
@@ -55,17 +55,17 @@ under `~/Library/CloudStorage`.
 
 ```sh
 sshdrive remove --all
-brew uninstall --cask ssh-drive
+brew uninstall --cask sshdrive
 ```
 
-`brew uninstall --zap --cask ssh-drive` additionally deletes the app group
+`brew uninstall --zap --cask sshdrive` additionally deletes the app group
 container with its index and configuration.
 
 ## Maintaining this tap
 
-- The file name is the cask token: `Casks/ssh-drive.rb` is what
-  `brew install --cask ssh-drive` resolves. The command it installs is
-  `sshdrive`, without the hyphen; the two names differ on purpose.
+- The file name is the cask token: `Casks/sshdrive.rb` is what
+  `brew install --cask sshdrive` resolves. The token matches the command it
+  installs and the source repository, all `sshdrive`.
 - Each SSH Drive release is built and notarized by `scripts/release.sh` in the
   source repository, which prints the `version` and `sha256` lines for the cask.
   Update those two lines here for each release; the DMG is attached to the
@@ -74,7 +74,7 @@ container with its index and configuration.
 
   ```sh
   brew style alecdwm/tap
-  brew audit --new --cask alecdwm/tap/ssh-drive
+  brew audit --new --cask alecdwm/tap/sshdrive
   ```
 
 - The cask's `uninstall` stanza signals the launchd label
