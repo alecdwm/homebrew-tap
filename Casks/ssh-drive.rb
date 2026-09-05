@@ -2,14 +2,13 @@ cask "ssh-drive" do
   version "0.1.0"
   sha256 "be1c283d952413affab846ae2be8add8acab706d589081e57019738f9ae6a16f"
 
-  url "https://github.com/alecdwm/sshdrive/releases/download/v#{version}/SSH-Drive-#{version}.dmg",
-      verified: "github.com/alecdwm/sshdrive/"
+  url "https://github.com/alecdwm/sshdrive/releases/download/v#{version}/SSH-Drive-#{version}.dmg"
   name "SSH Drive"
   desc "Mount SFTP locations in Finder through the File Provider framework"
   homepage "https://github.com/alecdwm/sshdrive"
 
-  # DESIGN.md section 2: minimum macOS 14.
-  depends_on macos: ">= :sonoma"
+  # DESIGN.md section 2: minimum macOS 14. The symbol form is a minimum in current Homebrew.
+  depends_on macos: :sonoma
 
   app "SSH Drive.app"
 
