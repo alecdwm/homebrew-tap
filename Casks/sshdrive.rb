@@ -46,28 +46,23 @@ cask "sshdrive" do
   # and SMAppService.register() keeps returning success throughout because as far as it is
   # concerned the item is still enabled. Only unregister() clears it (S1 f2, 2026-09-04).
   # On a first install there is nothing to unregister and the call is a no-op.
-  postflight do
-    assessment = system_command "/usr/sbin/spctl",
-                                args: ["--assess", "--type", "execute", "--verbose=4",
-                                       "#{appdir}/SSH Drive.app"],
-                                must_succeed: false
-    verdict = assessment.merged_output.strip
-    if assessment.success?
-      ohai "SSH Drive: #{verdict}"
-    else
-      opoo "SSH Drive did not pass Gatekeeper assessment: #{verdict}"
-    end
-
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/SSH Drive.app"],
-                   must_succeed: false
-
-    system_command "#{appdir}/SSH Drive.app/Contents/MacOS/SSH Drive",
-                   env: { "SSHDRIVE_AGENT_ROLE" => "unregister" },
-                   must_succeed: false
-    system_command "/usr/bin/open",
-                   args: ["-g", "#{appdir}/SSH Drive.app"],
-                   must_succeed: false
+  postflight_steps do
+    # Homebrew's declarative steps cannot branch, so the assessment's verdict is printed
+    # (print_stdout) rather than summarised; a failed assessment does not abort the install.
+    run "/usr/sbin/spctl",
+        args: ["--assess", "--type", "execute", "--verbose=4", "{{appdir}}/SSH Drive.app"],
+        print_stdout: true,
+        must_succeed: false
+    run "/usr/bin/xattr",
+        args: ["-dr", "com.apple.quarantine", "{{appdir}}/SSH Drive.app"],
+        must_succeed: false
+    run "SSH Drive.app/Contents/MacOS/SSH Drive",
+        base: :appdir,
+        env: { "SSHDRIVE_AGENT_ROLE" => "unregister" },
+        must_succeed: false
+    run "/usr/bin/open",
+        args: ["-g", "{{appdir}}/SSH Drive.app"],
+        must_succeed: false
   end
 
   # Homebrew runs `uninstall` on `brew upgrade` and `brew reinstall` as well as on
