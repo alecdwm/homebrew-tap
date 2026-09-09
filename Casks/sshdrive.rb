@@ -1,6 +1,6 @@
 cask "sshdrive" do
-  version "0.1.3"
-  sha256 "6dd8e2ddba2392105b91896819e3eeab794687fd7b75fdb017a083814fc2a9ad"
+  version "0.1.4"
+  sha256 "2be8cbc6ece8ee439859a2b90f1a2a4128885f5b5da635c0f63d5edb0d61bd3e"
 
   url "https://github.com/alecdwm/sshdrive/releases/download/v#{version}/SSH-Drive-#{version}.dmg"
   name "SSH Drive"
