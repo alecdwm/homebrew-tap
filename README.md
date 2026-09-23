@@ -10,7 +10,7 @@ brew tap alecdwm/tap
 
 | Token | What it installs | Source |
 |---|---|---|
-| `sshdrive` | SSH Drive: mounts SFTP locations in Finder through the File Provider framework, driven by the `sshdrive` command-line tool. No GUI. | [alecdwm/sshdrive](https://github.com/alecdwm/sshdrive) |
+| `sshdrive` | SSH Drive: mounts SSH servers in Finder through the File Provider framework, driven by the `sshdrive` command-line tool. No GUI. | [alecdwm/sshdrive](https://github.com/alecdwm/sshdrive) |
 
 ## SSH Drive
 
@@ -70,14 +70,18 @@ container with its index and configuration.
 
 ## Maintaining this tap
 
+- `Casks/sshdrive.rb` is written by the release workflow in
+  [alecdwm/sshdrive](https://github.com/alecdwm/sshdrive), which builds and
+  notarizes the DMG, attaches it to the matching GitHub release, and pushes the
+  cask here with the new `version` and `sha256` and a `sshdrive <version>`
+  commit message. Edit `packaging/cask/sshdrive.rb` in that repository, not the
+  copy here: the next release overwrites this one.
 - The file name is the cask token: `Casks/sshdrive.rb` is what
   `brew install --cask sshdrive` resolves. The token matches the command it
   installs and the source repository, all `sshdrive`.
-- Each SSH Drive release is built and notarized by `scripts/release.sh` in the
-  source repository, which prints the `version` and `sha256` lines for the cask.
-  Update those two lines here for each release; the DMG is attached to the
-  matching GitHub release in `alecdwm/sshdrive`.
-- Before announcing a release, run the checks Homebrew provides:
+- Before announcing a release, run the checks Homebrew provides. Neither machine
+  the app is built on has a Homebrew install, so this is the first time the cask
+  meets them:
 
   ```sh
   brew style alecdwm/tap
