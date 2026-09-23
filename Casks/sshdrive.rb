@@ -8,8 +8,8 @@
 # not a value anyone edits by hand.
 
 cask "sshdrive" do
-  version "0.1.6"
-  sha256 "eb939dea17563052ac50e077d5600086bc44a74e55b18d2691941f532efb2096"
+  version "0.1.7"
+  sha256 "cccd2304fe1a1d2ebd6574a661f30f35a69b42d84b25b2c37d9e664ddfbe8b8b"
 
   url "https://github.com/alecdwm/sshdrive/releases/download/v#{version}/SSH-Drive-#{version}.dmg"
   name "SSH Drive"
