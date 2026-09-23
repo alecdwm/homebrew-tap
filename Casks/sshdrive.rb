@@ -1,26 +1,36 @@
+# The cask alecdwm/homebrew-tap publishes as Casks/sshdrive.rb, which is the file name
+# `brew install --cask sshdrive` resolves the token to.
+#
+# This copy is the source of truth. `scripts/set-version.sh` stamps the `version` line from
+# the repository's VERSION file, and .github/workflows/release.yml rewrites `version` and
+# `sha256` for the DMG it has just notarized and pushes the result to the tap. The sha256
+# here is the last released one, so the file is always a cask Homebrew can install; it is
+# not a value anyone edits by hand.
+
 cask "sshdrive" do
-  version "0.1.4"
-  sha256 "2be8cbc6ece8ee439859a2b90f1a2a4128885f5b5da635c0f63d5edb0d61bd3e"
+  version "0.1.5"
+  sha256 "70f17ccd7953b837479e5e7b6fc1d0af5733bc3cc6fce512eb31ff28445c7529"
 
   url "https://github.com/alecdwm/sshdrive/releases/download/v#{version}/SSH-Drive-#{version}.dmg"
   name "SSH Drive"
   desc "Mount SFTP locations in Finder through the File Provider framework"
   homepage "https://github.com/alecdwm/sshdrive"
 
-  # DESIGN.md section 2: minimum macOS 14. The symbol form is a minimum in current Homebrew.
+  # Minimum macOS 14 (docs/design/platform.md). The symbol form is a minimum in current
+  # Homebrew.
   depends_on macos: :sonoma
 
   app "SSH Drive.app"
 
-  # DESIGN.md section 10: the CLI is symlinked out of the bundle rather than installed
-  # separately. It is a pure XPC client of the agent, so it works through any path,
-  # including this symlink; it just cannot be the thing that registers the app.
+  # The CLI is symlinked out of the bundle rather than installed separately. It is a pure
+  # XPC client of the agent, so it works through any path, including this symlink; it just
+  # cannot be the thing that registers the app (docs/design/packaging.md).
   binary "#{appdir}/SSH Drive.app/Contents/MacOS/sshdrive"
 
   # Launching the app is what registers the File Provider extension with PlugInKit and the
-  # login item through SMAppService, and both must be done from the app's own bundle
-  # (section 10). macOS then posts its "background item added" notification, with the item
-  # already enabled. That notification is the only UI a user sees.
+  # login item through SMAppService, and both must be done from the app's own bundle.
+  # macOS then posts its "background item added" notification, with the item already
+  # enabled. That notification is the only UI a user sees.
   #
   # The quarantine attribute has to go first, and this is not cosmetic. Homebrew leaves
   # `com.apple.quarantine` on the installed bundle, and LaunchServices registers no plugin
@@ -30,7 +40,7 @@ cask "sshdrive" do
   # fileproviderd answers `getDomainsForProviderIdentifier((null)) failed: FP -2001
   # Underlying FP -2014`. `pluginkit -a` registers the appex by hand and the next launch
   # wipes it again; stripping the attribute and opening the app registers it durably
-  # (first real cask install, macOS 26.6.2, 2026-09-05).
+  # (measured on macOS 26.6.2, 2026-09-05).
   #
   # Nothing is skipped by removing it. The DMG was assessed on the download path, its
   # notarization ticket is stapled to the app inside it, and `spctl --assess` is run here
@@ -44,7 +54,7 @@ cask "sshdrive" do
   # enabled status while launchd can no longer resolve the program: every spawn fails with
   # "Could not find and/or execute program specified by service" on a 10 s retry, for ever,
   # and SMAppService.register() keeps returning success throughout because as far as it is
-  # concerned the item is still enabled. Only unregister() clears it (S1 f2, 2026-09-04).
+  # concerned the item is still enabled. Only unregister() clears it (measured 2026-09-04).
   # On a first install there is nothing to unregister and the call is a no-op.
   postflight_steps do
     # Homebrew's declarative steps cannot branch, so the assessment's verdict is printed
@@ -66,28 +76,29 @@ cask "sshdrive" do
   end
 
   # Homebrew runs `uninstall` on `brew upgrade` and `brew reinstall` as well as on
-  # `brew uninstall`, so nothing destructive may live here (section 10).
+  # `brew uninstall`, so nothing destructive may live here.
   #
-  # The label is `org.shirls.sshdrive.agent`, the launchd label of section 3.1, and not the
-  # bundle id: Homebrew matches this string against `launchctl list` output, where only the
-  # label ever appears (S1 g1, 2026-09-04). The agent handles TERM itself - it shuts every
+  # The label is `org.shirls.sshdrive.agent`, the agent's launchd label
+  # (docs/design/components.md), and not the bundle id: Homebrew matches this string against
+  # `launchctl list` output, where only the label ever appears (measured 2026-09-04). The
+  # agent handles TERM itself - it shuts every
   # location's ssh master down and exits 0, which is what keeps `KeepAlive` with
   # `SuccessfulExit` false from restarting it out of the bundle being replaced.
   #
   # Deliberately no `launchctl:` here. That directive boots the label out of launchd while
   # SMAppService and the background-task database still consider the login item enabled, so
   # the next launch would register "only if needed", do nothing, and leave the mach service
-  # dead until the next login (section 10).
+  # dead until the next login.
   uninstall signal: ["TERM", "org.shirls.sshdrive.agent"]
 
   # `zap` runs after the app has already been deleted, so nothing here can call
   # `sshdrive remove --all`: by this point there is no CLI and no provider left to call
   # NSFileProviderManager.remove(domain), which is why the caveats and `sshdrive doctor`
-  # both say to run it first (section 10).
+  # both say to run it first.
   #
   # `launchctl:` is right here, unlike in `uninstall`, because nothing is coming back.
   # The group container is where config.json, every domain's index.sqlite,
-  # capabilities.json and pins.json live (section 3).
+  # capabilities.json and pins.json live (docs/design/components.md).
   #
   # What `zap` cannot reach, and what the caveats therefore have to say:
   #   - the keychain items. They live in the data-protection keychain under access group
